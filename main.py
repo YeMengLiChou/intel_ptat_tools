@@ -1,52 +1,51 @@
-import ctypes
+import asyncio
 import logging
 import sys
-from typing import Optional
-import socket
-import websocket
+from service import PTATService, MessageListener
+from commands import GetLicenseStatus, MonitorView, AddToMonitorList, \
+    RemoveFromMonitorList, GetMonitorData, StartMonitor, StopMonitor
 
-import utils
-import ptata_service
+PTAT_LAUNCHER_PATH = "C:\\Program Files\\Intel Corporation\\Intel(R)PTAT\\PTATLauncher.exe"
 
-PTAT_LAUNCHER_PATH = "\C:\Program Files"
-PORT_NUMBER = 64900
-SOCKET_ADDR = f"localhost:{PORT_NUMBER}/echo"
-SOCKET_TIMEOUT_SECONDS = 5
-MAX_RETRY_COUNT = 3
+class MessageListenerImpl(MessageListener):
 
-def connect_socket() -> Optional[socket.socket]:
-    sc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sc.settimeout(SOCKET_TIMEOUT_SECONDS)
-    is_connected = False
-    retry_count = 0
-    while not is_connected and retry_count < MAX_RETRY_COUNT:
-        connect_status = sc.connect_ex(SOCKET_ADDR)
-        is_connected = connect_status == 0
-        retry_count += 1
+    def on_error(self, e: Exception):
+        logging.error(f"error: {e}")
+        return super().on_error(e)
+    
+    def on_message(self, message: str | bytes):
+        logging.info(f"recv msg: ${message}")
+        return super().on_message(message)
 
+    def on_open(self):
+        logging.info("opened ..")
+        return super().on_open()
+
+
+async def main_impl():
+    service = PTATService("127.0.0.1", 64900, MessageListenerImpl())
+    
+    is_connected = await service.connect(timeout=5)
     if not is_connected:
-        return None
-    return sc
-
-
-
-
-def main_impl():
-    if not utils.is_admin():
-        logging.error("请以管理员权限运行")
+        logging.error("can't connect to ptat!")
         sys.exit(1)
 
-    # 启动
-    # ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, )
-    # 等待
-    if sc := connect_socket():
-        logging.error("连接 ptat 工具失败！请重试！")
-        sys.exit(1)
+    result = await GetLicenseStatus().execute_and_get_result(service)
+    print(f"result: {result}")
 
-    service = ptata_service.PTATServie(sc)
+    await MonitorView().execute(service)
 
+    result = await GetMonitorData().execute_and_get_result(service)
+    print(f"result: {result}")
 
+    result = await AddToMonitorList(params={"Args": "0"}).execute_and_get_result(service)
+    print(f"result: {result}")
 
+    result = await StartMonitor().execute_and_recv_result(service)
+    
+    # await service.keeping()
+    await asyncio.Event().wait()
+    
 
 if __name__ == '__main__':
-    main_impl()
+    asyncio.run(main_impl())
