@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from typing import List, Optional, Union
-
+from typing import List, Literal, Optional, Union
+from enum import Enum
 @dataclass
 class EmptyResult:
     pass
@@ -71,7 +71,6 @@ class StartMonitorResult(dict[int, str]):
 
 
 
-
 @dataclass
 class SettingsOption:
     key: str 
@@ -85,8 +84,8 @@ class SettingsOption:
     KEY_LOG_FILE_TYPE_SELECT = "LogFileTypeSelected"
     KEY_MEM_LOG_LEVEL = "MEM Log Level"
     KEY_MEM_LOG_LEVEL_SELECT = "MEMLogLevelUserSelection"
-    KEY_CUP_LOG_LEVEL = "CPULogLevel"
-    KEY_CUP_LOG_LEVEL_SELECT = "CPULogLevelUserSelection"
+    KEY_CPU_LOG_LEVEL = "CPULogLevel"
+    KEY_CPU_LOG_LEVEL_SELECT = "CPULogLevelUserSelection"
     KEY_FILE_OPTION = "FileOption"
     KEY_FILE_OPTION_SELECT = "FileOptionSelected"
     KEY_LOG_FILE_NAME = "LogFileName"
@@ -103,11 +102,27 @@ class SettingsOption:
     KEY_LOG_STATIC_DATA = "LogStaticData"
 
 
-
-
-
-    
-
 @dataclass
 class GetSettingsResult(dict[str, SettingsOption]):
+    pass
+
+
+class ToolInfo(Enum):   
+    DEFAULT_PATH = "DefaultPath"
+    CURRENT_IP_ADDRESS = "CurrentIpAddress"
+    WORK_SPACE_PATH = "WorkSpacePath"
+    OPERATING_SYSTEM = "OperatingSystem"
+    SCRIPT_FILE_PATH = "ScriptFilePath"
+    LOG_PATH = "LogPath"
+    ALERT_PATH = "AlertPath"
+    INSTALLED_PATH = "InstalledPath"
+    IS_TELEMETRY_LICENSE_AGREED = "IsTelemetryLicenseAgreed"
+    IS_TELEMETRY_ENABLED = "IsTelemetryEnabled"
+    OS_VERSION = "OSVersion"
+    PLATFORM_SKU = "platform_sku"
+    SHOW_CONTROL_WARNING = "ShowControlWarning"
+
+
+@dataclass
+class GetToolInfoResult(dict[str, str]):
     pass

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import asyncio
+from datetime import datetime
 import logging
 from typing import Optional
 import websockets
@@ -28,7 +29,7 @@ class PTATService(CommandExecutor):
     """
     __max_retry_count = 5
 
-    def __init__(self, host: str, port: int, listener: MessageListener):
+    def __init__(self, host: str, port: int, listener: Optional[MessageListener] = None):
         super().__init__()
         self._listener = listener
         self._addr: str = f"ws://{host}:{port}/echo"
@@ -44,19 +45,21 @@ class PTATService(CommandExecutor):
                 self._ws = await asyncio.wait_for(
                     websockets.connect(
                         self._addr, 
-                        ping_interval=1000, # 保活需要比较大的间隔和超时
-                        ping_timeout=1000
+                        ping_interval=20, # 保活需要比较大的间隔和超时
+                        ping_timeout=None, # 不进行超时哦判断
                     ), 
                     timeout
                 )
                 self._ws.start_keepalive()
                 self._recv_task = asyncio.create_task(self._recv_loop())
-                self._listener.on_open()
+                if self._listener is not None:
+                    self._listener.on_open()
                 self.is_running = True
                 return True
             except Exception as e:
                 if idx == self.__max_retry_count - 1:
-                    self._listener.on_error(e)
+                    if self._listener is not None:
+                        self._listener.on_error(e)
                 elif idx > 0:
                     logging.warning("connect error, retrying ...")
                 self._recv_task = None
@@ -80,14 +83,15 @@ class PTATService(CommandExecutor):
         try:
            while self._ws is not None:
                 async for message in self._ws:
-                    print("_recv_loop: {}".format(message[0:30]))
+                    print("_recv_loop: {}".format(message[0:100]))
                     try: 
-                        self._listener.on_message(message)
+                        if self._listener is not None:
+                            self._listener.on_message(message)
                         await self._msg_queue.put(message)
                     except Exception as e:
                         logging.exception(f"recv message error {e}")
         except Exception as e:
-            logging.exception(f"fuck looping happen error!!!! {e}")
+            logging.exception(f"fuck looping happen error!!!! when {datetime.microsecond} {e}")
 
     async def keeping(self):
         if self._recv_task:

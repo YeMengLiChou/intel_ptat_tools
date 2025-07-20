@@ -1,6 +1,8 @@
 from .base import Command, NoResponseCommand, OnceResponseCommand, MultiResponseCommand
-from .common import GetLicenseStatus, GetLicenseStatusResult
+from .common import GetLicenseStatus, GetToolInfo
 from .monitor import MonitorView, AddToMonitorList, RemoveFromMonitorList, StartMonitor, StopMonitor, GetMonitorData
+from .logging import StartLogging, StopLogging, GetLogHeaderServer
+from .result import GetLicenseStatusResult, GetToolInfoResult
 
 __all__ = (
     "Command",
@@ -8,11 +10,15 @@ __all__ = (
     "NoResponseCommand",
     "MultiResponseCommand",
     "GetLicenseStatus",
+    "GetToolInfo",
     "GetLicenseStatusResult",
     "MonitorView",
     "AddToMonitorList",
     "RemoveFromMonitorList",
     "StartMonitor",
     "StopMonitor",
-    "GetMonitorData"
+    "GetMonitorData",
+    "StartLogging",
+    "StopLogging",
+    "GetLogHeaderServer"
 )

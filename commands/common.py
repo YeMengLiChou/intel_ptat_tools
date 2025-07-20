@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from .result import GetLicenseStatusResult
+from .result import GetLicenseStatusResult, GetToolInfoResult
 from .base import OnceResponseCommand
 
 
@@ -20,3 +20,13 @@ class GetLicenseStatus(OnceResponseCommand[GetLicenseStatusResult]):
         return result
     
 
+
+class GetToolInfo(OnceResponseCommand[GetToolInfoResult]):
+
+    def _handle_command_msg(self, data: list) -> GetToolInfoResult:
+        data_dict =  {
+            str(item["Key"]): str(item["Value"]) for item in data
+        }
+        result = GetToolInfoResult()
+        result.update(data_dict)
+        return result
